@@ -1,41 +1,103 @@
 <?php
-// MOPADAUG SA CONNECTION GIKAN SA FLUTTER WEB (CORS FIX)
-header("Access-Control-Allow-Origin: *");
+
+// ================================
+// CORS CONFIGURATION (SECURE)
+// ================================
+
+$trusted_domains = [
+    "https://yourdomain.com",
+    "http://localhost:3000",
+    "http://localhost:5000"
+];
+
+if (isset($_SERVER['HTTP_ORIGIN']) && in_array($_SERVER['HTTP_ORIGIN'], $trusted_domains)) {
+    header("Access-Control-Allow-Origin: " . $_SERVER['HTTP_ORIGIN']);
+}
+
 header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 
-// Tubagon ang browser kung mangutana pa lang kini (Preflight)
-if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+// Handle browser preflight request
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
-    exit;
+    exit();
 }
 
 header("Content-Type: application/json");
-include 'connection.php'; 
 
-// Dawaton ang data bisan unsaon pagpadala sa Flutter (POST o JSON)
+// ================================
+// DATABASE CONNECTION
+// ================================
+include 'connection.php';
+
+// ================================
+// READ INPUT FROM FLUTTER
+// ================================
+
 $json = file_get_contents('php://input');
 $data = json_decode($json, true);
 
-$email = isset($_POST['email']) ? $_POST['email'] : ($data['email'] ?? '');
-$password = isset($_POST['password']) ? $_POST['password'] : ($data['password'] ?? '');
+$email = $_POST['email'] ?? ($data['email'] ?? '');
+$password = $_POST['password'] ?? ($data['password'] ?? '');
 
-if (!empty($email) && !empty($password)) {
-    // Siguruha nga ang table name "users" ug naay columns: email, password, role
-    $stmt = $conn->prepare("SELECT id, email, role FROM users WHERE email = ? AND password = ?");
-    $stmt->bind_param("ss", $email, $password);
-    $stmt->execute();
-    $result = $stmt->get_result();
+// ================================
+// VALIDATION
+// ================================
 
-    $users = array();
-    while ($row = $result->fetch_assoc()) {
-        $row['usr_fullname'] = explode('@', $row['email'])[0]; 
-        $users[] = $row;
+if (empty($email) || empty($password)) {
+    echo json_encode([
+        "status" => "error",
+        "message" => "Please provide email and password"
+    ]);
+    exit();
+}
+
+// ================================
+// FIND USER
+// ================================
+
+$stmt = $conn->prepare("SELECT id, email, password, role FROM users WHERE email = ?");
+$stmt->bind_param("s", $email);
+$stmt->execute();
+
+$result = $stmt->get_result();
+
+if ($user = $result->fetch_assoc()) {
+
+    // Verify hashed password
+    if (password_verify($password, $user['password'])) {
+
+        $response = [
+            "status" => "success",
+            "user" => [
+                "id" => $user['id'],
+                "email" => $user['email'],
+                "role" => $user['role'],
+                "usr_fullname" => explode('@', $user['email'])[0]
+            ]
+        ];
+
+        echo json_encode($response);
+
+    } else {
+
+        echo json_encode([
+            "status" => "error",
+            "message" => "Invalid password"
+        ]);
+
     }
 
-    echo json_encode($users);
 } else {
-    // Kung ma-access ang link pero walay email/pass gipasa
-    echo json_encode(["message" => "Please provide credentials"]);
+
+    echo json_encode([
+        "status" => "error",
+        "message" => "User not found"
+    ]);
+
 }
+
+$stmt->close();
+$conn->close();
+
 ?>
