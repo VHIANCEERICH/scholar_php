@@ -1,18 +1,50 @@
 <?php
-// Database configuration
-$host     = "localhost";
-$username = "root";      // Default XAMPP username
-$password = "";          // Default XAMPP password is empty
-$dbname   = "scholarship_db"; // Change this to your actual database name
+// ======================================
+// DATABASE CONFIGURATION
+// ======================================
 
-// Create connection using MySQLi
+$host     = "localhost";
+$username = "scholar_user";        // Do NOT use root in production
+$password = "StrongPassword123!";  // Your database password
+$dbname   = "scholarship_db";
+
+// ======================================
+// CREATE DATABASE CONNECTION
+// ======================================
+
 $conn = new mysqli($host, $username, $password, $dbname);
 
-// Check connection
+// ======================================
+// CHECK CONNECTION
+// ======================================
+
 if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+
+    http_response_code(500);
+
+    echo json_encode([
+        "status" => "error",
+        "message" => "Database connection failed"
+    ]);
+
+    exit();
 }
 
-// Connection successful (Optional: comment this out later for a cleaner UI)
-// echo "Connected successfully";
+// ======================================
+// SECURITY IMPROVEMENTS
+// ======================================
+
+// Set secure character encoding
+$conn->set_charset("utf8mb4");
+
+// Optional: set timezone
+date_default_timezone_set("Asia/Manila");
+
+// ======================================
+// CONNECTION SUCCESSFUL
+// (Do not echo messages in production)
+// ======================================
+
+// echo "Database connected successfully";
+
 ?>
