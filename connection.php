@@ -4,8 +4,8 @@
 // ======================================
 
 $host     = "localhost";
-$username = "scholar_user";        // Do NOT use root in production
-$password = "StrongPassword123!";  // Your database password
+$username = "scholar_user";        // Secure database user (not root)
+$password = "StrongPassword123!";  // Database password
 $dbname   = "scholarship_db";
 
 // ======================================
@@ -19,14 +19,11 @@ $conn = new mysqli($host, $username, $password, $dbname);
 // ======================================
 
 if ($conn->connect_error) {
-
     http_response_code(500);
-
     echo json_encode([
         "status" => "error",
         "message" => "Database connection failed"
     ]);
-
     exit();
 }
 
@@ -34,17 +31,16 @@ if ($conn->connect_error) {
 // SECURITY IMPROVEMENTS
 // ======================================
 
-// Set secure character encoding
+// Secure character encoding
 $conn->set_charset("utf8mb4");
 
-// Optional: set timezone
+// Set timezone
 date_default_timezone_set("Asia/Manila");
 
 // ======================================
 // CONNECTION SUCCESSFUL
-// (Do not echo messages in production)
 // ======================================
 
-// echo "Database connected successfully";
+// echo "Database connected successfully"; // Keep commented in production
 
 ?>
