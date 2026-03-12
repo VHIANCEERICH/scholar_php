@@ -1,13 +1,13 @@
 <?php
-
 // ======================================
-// LOAD ENVIRONMENT VARIABLES
+// DATABASE CONFIGURATION (FROM ENV)
 // ======================================
 
-$host     = $_ENV['DB_HOST'] ?? 'localhost';
-$username = $_ENV['DB_USER'] ?? '';
-$password = $_ENV['DB_PASS'] ?? '';
-$dbname   = $_ENV['DB_NAME'] ?? '';
+// Load values from environment variables
+$host     = getenv('DB_HOST') ?: 'localhost';
+$username = getenv('DB_USER') ?: '';
+$password = getenv('DB_PASS') ?: '';
+$dbname   = getenv('DB_NAME') ?: '';
 
 // ======================================
 // CREATE DATABASE CONNECTION
@@ -34,7 +34,10 @@ if ($conn->connect_error) {
 // SECURITY SETTINGS
 // ======================================
 
+// Secure character encoding
 $conn->set_charset("utf8mb4");
+
+// Set timezone
 date_default_timezone_set("Asia/Manila");
 
 ?>
